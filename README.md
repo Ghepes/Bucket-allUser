@@ -1,4 +1,7 @@
 # Bucket-allUser
+
+Block allUser with API Key - hidden index.html block
+
 Cloud Storage Bucket Global Wromo to open with allUser olso add admin  to allUser
 
 Public to internet
