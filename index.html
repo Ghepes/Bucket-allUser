@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>File Manager - Cloud Storage Bucket Global Wromo</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+        .file-container {
+            border: 1px solid #ddd;
+            padding: 10px;
+            margin: 10px;
+            max-width: 150px;
+            word-break: break-word;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .file-container img, .file-container video, .file-container .folder-icon {
+            max-width: 100%;
+            height: auto;
+            cursor: pointer;
+        }
+        .file-container input[type="checkbox"] {
+            margin-top: 10px;
+        }
+        .file-name {
+            margin-top: 5px;
+            text-align: center;
+            word-break: break-word;
+            font-size: 14px;
+        }
+        #apiKeyInput, #fetchFilesButton, #fileUploadInput, #createFolderInput, #createFolderButton, #deleteFilesButton, #searchInput {
+            margin: 10px;
+        }
+        #gallery {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-top: 20px;
+            width: 100%;
+        }
+        #fileManager {
+            display: none; /* Hide the elements initially */
+            width: 100%;
+            text-align: center;
+        }
+        #fileUploadInput, #gallery {
+            border: 2px dashed #ddd;
+            padding: 20px;
+        }
+    </style>
+</head>
+<body>
+
+<h1>File Manager - Cloud Storage Bucket Global Wromo</h1>
+
+<!-- Input pentru API Key -->
+<input type="text" id="apiKeyInput" placeholder="Introduce API Key" name="wromo apy key login" class="wromo-goo-cloud-apy-key-login" />
+<button id="fetchFilesButton" title="Api key login" class="wromo-goo-cloud-apy-buton-login" type="button" nonce="" >Login</button>
+
+<p id="info" class="wromo-goo-cloud-apy-key-info">Must get the key from the webpage www.studio.wromo.com</p>
+
+<div id="fileManager" class="wromo-goo-cloud-apy-key-login-div">
+    <input type="text" id="searchInput" placeholder="Search..." name="search" class="wromo-goo-cloud-apy-key-login-input-search" nonce="" />
+    <button id="deleteFilesButton" title="Delete selected files" class="wromo-goo-cloud-delete-files-now" type="button">Delete Selected Files</button>
+    <br>
+
+    <!-- Input pentru Upload -->
+    <input type="file" id="fileUploadInput" multiple placeholder="Upload Files" name="wromo upload files" class="wromo-goo-cloud-apy-key-login-input-upload-files" />
+    <button id="uploadFileButton" title="buton upload file goo cloud" class="wromo-goo-cloud-upload-files-now" type="button">Upload Files</button>
+
+    <!-- Input pentru Creare Folder -->
+    <input type="text" id="createFolderInput" placeholder="New Folder Name" name="wromo goo cloud create folder" class="wromo-goo-cloud-apy-key-login-input-create-folder" />
+    <button id="createFolderButton" title="wromo buton goo cloud create folder" class="wromo-goo-cloud-create-folder-now" type="button">Create Folder</button>
+
+    <div id="gallery" class="wromo-gallery-goo-cloud"></div>
+</div>
+
+<script>
+    const bucketName = 'BUCKET___NAME__NAME___LOL';
+
+    document.getElementById('fetchFilesButton').addEventListener('click', function() {
+        const apiKey = document.getElementById('apiKeyInput').value;
+        if (apiKey) {
+            fetchFiles(apiKey);
+        } else {
+            alert('Please enter an API Key.');
+        }
+    });
+
+    document.getElementById('uploadFileButton').addEventListener('click', function() {
+        const apiKey = document.getElementById('apiKeyInput').value;
+        const files = document.getElementById('fileUploadInput').files;
+        if (apiKey && files.length > 0) {
+            // Preventing index.html file from loading
+            for (const file of files) {
+                if (file.name.toLowerCase() == 'index.html') {
+                    alert('Uploading a file named "index.html" is not allowed.');
+                    return;
+                }
+            }
+            uploadFiles(apiKey, files);
+        } else {
+            alert('Please enter an API Key and select files to upload.');
+        }
+    });
+
+    document.getElementById('createFolderButton').addEventListener('click', function() {
+        const apiKey = document.getElementById('apiKeyInput').value;
+        const folderName = document.getElementById('createFolderInput').value;
+        if (apiKey && folderName) {
+            createFolder(apiKey, folderName);
+        } else {
+            alert('Please enter an API Key and a folder name.');
+        }
+    });
+
+    document.getElementById('deleteFilesButton').addEventListener('click', function() {
+        const apiKey = document.getElementById('apiKeyInput').value;
+        if (apiKey) {
+            deleteSelectedFiles(apiKey);
+        } else {
+            alert('Please enter an API Key.');
+        }
+    });
+
+    document.getElementById('searchInput').addEventListener('input', function() {
+        const searchQuery = this.value.toLowerCase();
+        const fileContainers = document.querySelectorAll('.file-container');
+        fileContainers.forEach(container => {
+            const fileName = container.querySelector('a, img, video').alt || container.querySelector('a, img, video').textContent;
+            if (fileName.toLowerCase().includes(searchQuery)) {
+                container.style.display = '';
+            } else {
+                container.style.display = 'none';
+            }
+        });
+    });
+
+    document.getElementById('gallery').addEventListener('dragover', function(event) {
+        event.preventDefault();
+    });
+
+    document.getElementById('gallery').addEventListener('drop', function(event) {
+        event.preventDefault();
+        const apiKey = document.getElementById('apiKeyInput').value;
+        if (apiKey) {
+            const files = event.dataTransfer.files;
+            if (files.length > 0) {
+                for (const file of files) {
+                    if (file.name.toLowerCase() == 'index.html') {
+                        alert('Uploading a file named "index.html" is not allowed.');
+                        return;
+                    }
+                }
+                uploadFiles(apiKey, files);
+            }
+        } else {
+            alert('Please enter an API Key.');
+        }
+    });
+
+    async function fetchFiles(apiKey) {
+        const baseUrl = `https://storage.googleapis.com/storage/v1/b/${bucketName}/o?key=${apiKey}`;
+        try {
+            const response = await fetch(baseUrl);
+            const data = await response.json();
+
+            if (response.ok) {
+                document.getElementById('fileManager').style.display = 'block'; // Shows the rest of the interface
+                const gallery = document.getElementById('gallery');
+                gallery.innerHTML = ''; 
+
+                if (data.items) {
+                    data.items.forEach(item => {
+                        const fileName = item.name.split('/').pop();
+                        if (fileName.toLowerCase() == 'index.html') {
+                            // Skip showing the index.html file
+                            return;
+                        }
+
+                        const fileUrl = `https://storage.googleapis.com/${bucketName}/${item.name}`;
+                        const fileContainer = document.createElement('div');
+                        fileContainer.className = 'file-container';
+
+                        if (item.name.endsWith('/')) { 
+                            const folderIcon = document.createElement('div');folderIcon.style.width = '150px'; 
+                            folderIcon.style.height = '150px'; 
+                            folderIcon.style.backgroundImage = `url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path d="M16,13c0,0.552-0.448,1-1,1H2V6c0-0.552,0.448-1,1-1h13V13z"></path><path d="M4,3c0-0.552-0.448-1-1-1H1C0.448,2,0,2.448,0,3v10c0,0.552,0.448,1,1,1V5c0-0.552,0.448-1,1-1h12 c0-0.552-0.448-1-1-1H4z"></path></svg>')`;folderIcon.className = 'folder-icon'; 
+                            fileContainer.appendChild(folderIcon);
+
+                            const fileNameElement = document.createElement('div');
+                            fileNameElement.className = 'file-name';
+                            fileNameElement.textContent = fileName;
+                            fileContainer.appendChild(fileNameElement);
+
+                        } else if (fileName.match(/\.(jpeg|jpg|gif|png|bmp|webp)$/i)) {
+                            const imgElement = document.createElement('img');
+                            imgElement.src = fileUrl;
+                            imgElement.alt = fileName;
+                            fileContainer.appendChild(imgElement);
+
+                            const fileNameElement = document.createElement('div');
+                            fileNameElement.className = 'file-name';
+                            fileNameElement.textContent = fileName;
+                            fileContainer.appendChild(fileNameElement);
+
+                        } else if (fileName.match(/\.(mp4|webm|ogg)$/i)) {
+                            const videoElement = document.createElement('video');
+                            videoElement.controls = true;
+                            videoElement.src = fileUrl;
+                            videoElement.alt = fileName;
+                            fileContainer.appendChild(videoElement);
+
+                            const fileNameElement = document.createElement('div');
+                            fileNameElement.className = 'file-name';
+                            fileNameElement.textContent = fileName;
+                            fileContainer.appendChild(fileNameElement);
+
+                        } else {
+                            const linkElement = document.createElement('a');
+                            linkElement.href = fileUrl;
+                            linkElement.textContent = fileName;
+                            linkElement.alt = fileName;
+                            fileContainer.appendChild(linkElement);
+
+                            const fileNameElement = document.createElement('div');
+                            fileNameElement.className = 'file-name';
+                            fileNameElement.textContent = fileName;
+                            fileContainer.appendChild(fileNameElement);
+                        }
+
+                        const checkbox = document.createElement('input');
+                        checkbox.type = 'checkbox';
+                        checkbox.value = item.name;
+                        fileContainer.appendChild(checkbox);
+
+                        gallery.appendChild(fileContainer);
+                    });
+                } else {
+                    gallery.innerHTML = '<p>No files found in the bucket.</p>';
+                }
+            } else {
+                alert('Invalid API Key or no access to bucket.');
+            }
+        } catch (error) {
+            console.error('Error fetching files:', error);
+            alert('There was an error fetching the files. Please check your API Key and bucket name.');
+        }
+    }
+
+    async function uploadFiles(apiKey, files) {
+        const baseUrl = `https://storage.googleapis.com/upload/storage/v1/b/${bucketName}/o?uploadType=media&key=${apiKey}`;
+
+        for (const file of files) {
+            try {
+                const response = await fetch(`${baseUrl}&name=${file.name}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': file.type
+                    },
+                    body: file
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to upload file: ' + file.name);
+                }
+
+                console.log('Uploaded file:', file.name);
+            } catch (error) {
+                console.error('Error uploading file:', error);
+                alert('There was an error uploading the file. Please try again.');
+            }
+        }
+
+        fetchFiles(apiKey);
+    }
+
+    async function createFolder(apiKey, folderName) {
+        const baseUrl = `https://storage.googleapis.com/upload/storage/v1/b/${bucketName}/o?uploadType=media&key=${apiKey}`;
+
+        try {
+            const response = await fetch(`${baseUrl}&name=${encodeURIComponent(folderName)}/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                body: ''
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to create folder: ' + folderName);
+            }
+
+            console.log('Created folder:', folderName);
+        } catch (error) {
+            console.error('Error creating folder:', error);
+            alert('There was an error creating the folder. Please try again.');
+        }
+
+        fetchFiles(apiKey);
+    }
+
+    async function deleteSelectedFiles(apiKey) {
+        const selectedFiles = document.querySelectorAll('.file-container input[type="checkbox"]:checked');
+        if (selectedFiles.length == 0) {
+            alert('Please select files to delete.');
+            return;
+        }
+
+        for (const checkbox of selectedFiles) {
+            const fileName = checkbox.value;
+            try {
+                const response = await fetch(`https://storage.googleapis.com/storage/v1/b/${bucketName}/o/${encodeURIComponent(fileName)}?key=${apiKey}`, {
+                    method: 'DELETE'
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to delete file: ' + fileName);
+                }
+
+                console.log('Deleted file:', fileName);
+            } catch (error) {
+                console.error('Error deleting file:', error);
+                alert('There was an error deleting the file. Please try again.');
+            }
+        }
+
+        fetchFiles(apiKey);
+    }
+</script>
+
+</body>
+</html>
