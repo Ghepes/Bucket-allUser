@@ -1,12 +1,14 @@
 # Bucket-allUser
 
-Block allUser with API Key - hidden index.html block
+### Login with Key API to your google Cloud Storage
 
-with index.html login to bucket storage - Login with API key project
+Add allUser to your google storage API end generate a new API Key - this includ hidden index.html in storage cloud
 
-Cloud Storage Bucket Global Wromo to open with allUser olso add admin  to allUser
+with index.html login to bucket storage - Login to interface wer include API key to login
 
-Public to internet
+### Setting:
+
+FSet your storage to Public AllUser
 
 Locations - (multiple regions in United States)
 Storage class - Standard
